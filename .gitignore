@@ -1,0 +1,16 @@
+# Wird beim Bauen erzeugt
+build/
+Hark.iconset/
+*.dmg
+bericht_*.txt
+bau-verlauf.txt
+proben/
+
+# Nur bei mir auf der Platte
+alt/
+sprich.txt
+NACHRICHT AN DEINEN FREUND.txt
+.DS_Store
+
+# Hark-Symbol.zip gehoert ausdruecklich MIT ins Repo:
+# ohne die Datei kann niemand, der das Projekt klont, das App-Symbol bauen.
