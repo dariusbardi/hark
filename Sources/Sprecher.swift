@@ -29,6 +29,17 @@ final class Sprecher {
     private var zuletztGesagt = ""
     private var liestGerade = false
     private var liestSeit = Date.distantPast
+
+    /// Messages waiting their turn, oldest first. With several chats open, a
+    /// second answer must not cut the first one off in mid-sentence — it waits.
+    private var warteschlange: [(text: String, quelle: String?)] = []
+
+    /// How many are still waiting. The menu shows this.
+    var wartende: Int { warteschlange.count }
+
+    private var laeuftGerade: Bool {
+        stimme.isSpeaking || piper.redetGerade || piperRedet
+    }
     private var spracheGeradeVorher = false
 
     var redetGerade: Bool { stimme.isSpeaking || piper.redetGerade }
@@ -79,6 +90,12 @@ final class Sprecher {
         } ?? standardDatei
         let ordner = (ziel as NSString).deletingLastPathComponent
         try? FileManager.default.createDirectory(atPath: ordner, withIntermediateDirectories: true)
+        // The postbox: any text file dropped in here is read out once and then
+        // removed. One file per message means two chats writing at the same
+        // moment cannot overwrite each other, which the single file cannot
+        // promise.
+        try? FileManager.default.createDirectory(atPath: (ordner as NSString)
+            .appendingPathComponent("postfach"), withIntermediateDirectories: true)
         if !FileManager.default.fileExists(atPath: ziel) {
             FileManager.default.createFile(atPath: ziel, contents: Data())
         }
@@ -141,6 +158,8 @@ final class Sprecher {
     }
 
     func abbrechen() {
+        // "Stop reading" means everything, not just this one sentence.
+        warteschlange.removeAll()
         stimme.stopSpeaking(at: .immediate)
         piper.abbrechen()
         piperRedet = false
@@ -169,6 +188,7 @@ final class Sprecher {
             spracheGeradeVorher = redet
             beiSprechwechsel?(redet)
         }
+        if !redet { naechstes() }
 
         guard eingeschaltet else { return }
         if liestGerade {
@@ -200,16 +220,74 @@ final class Sprecher {
             if !wirdGeschrieben {
                 gelesen = (try? String(contentsOfFile: pfad, encoding: .utf8)) ?? ""
             }
+            // The postbox, in the order things were dropped in. Each file is
+            // taken away as it is read, so nothing is ever read twice.
+            var post: [(String, String?)] = []
+            let postfach = (pfad as NSString).deletingLastPathComponent
+                + "/postfach"
+            if let namen = try? FileManager.default.contentsOfDirectory(atPath: postfach) {
+                let dateien = namen
+                    .filter { $0.hasSuffix(".txt") && !$0.hasPrefix(".") }
+                    .map { (postfach as NSString).appendingPathComponent($0) }
+                    .sorted { Self.zeit($0) < Self.zeit($1) }
+                for f in dateien {
+                    let alter = Date().timeIntervalSince(Self.zeit(f))
+                    guard alter < 0 || alter > 0.15 else { continue }   // still being written
+                    let roh = (try? String(contentsOfFile: f, encoding: .utf8)) ?? ""
+                    try? FileManager.default.removeItem(atPath: f)
+                    let t = roh.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !t.isEmpty { post.append((t, Self.absender(f))) }
+                }
+            }
+
             let inhalt = gelesen
+            let eingegangen = post
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 self.liestGerade = false
+                for (t, quelle) in eingegangen { self.einreihen(t, quelle: quelle) }
+
                 let text = inhalt.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !text.isEmpty, text != self.zuletztGesagt else { return }
                 self.zuletztGesagt = text
-                self.sprich(text)
+                self.einreihen(text, quelle: nil)
             }
         }
+    }
+
+    // MARK: - Waiting their turn
+
+    /// Put a message in line. If nothing is being read out, it starts at once.
+    private func einreihen(_ text: String, quelle: String?) {
+        warteschlange.append((text, quelle))
+        if !laeuftGerade { naechstes() }
+    }
+
+    /// Take the next one, if there is one and nothing is running.
+    private func naechstes() {
+        guard !laeuftGerade, !warteschlange.isEmpty else { return }
+        let naechste = warteschlange.removeFirst()
+        if let quelle = naechste.quelle, !quelle.isEmpty {
+            // Say where it came from, otherwise you have no idea which of your
+            // chats is talking to you.
+            sprich(T.t("\(quelle) schreibt: ", "\(quelle) says: ") + naechste.text)
+        } else {
+            sprich(naechste.text)
+        }
+    }
+
+    nonisolated private static func zeit(_ pfad: String) -> Date {
+        (try? FileManager.default.attributesOfItem(atPath: pfad))?[.modificationDate]
+            as? Date ?? .distantPast
+    }
+
+    /// The file name is the sender: "bazo.txt" becomes "Bazo". A name that
+    /// starts with a digit is a timestamp, not a name — then we say nothing.
+    nonisolated private static func absender(_ pfad: String) -> String? {
+        let stamm = ((pfad as NSString).lastPathComponent as NSString)
+            .deletingPathExtension
+        guard let erstes = stamm.first, erstes.isLetter else { return nil }
+        return stamm.prefix(1).uppercased() + stamm.dropFirst()
     }
 
     func sprich(_ text: String) {

@@ -4,7 +4,7 @@ import AppKit
 import AVFoundation
 import Speech
 
-let harkVersion = "1.0"
+let harkVersion = "1.1"
 
 @MainActor
 final class EinstellungenFenster: NSObject, NSWindowDelegate,
@@ -271,6 +271,16 @@ final class EinstellungenFenster: NSObject, NSWindowDelegate,
         autostartHaken.frame = NSRect(x: 174, y: y, width: 320, height: 20)
         autostartHaken.state = Autostart.an ? .on : .off
         v.addSubview(autostartHaken)
+
+        y -= 30
+        let updateHaken = NSButton(checkboxWithTitle: T.t("Nach neuen Fassungen schauen",
+                                                          "Check for new versions"),
+                                   target: self, action: #selector(updatePruefenUmschalten))
+        updateHaken.frame = NSRect(x: 174, y: y, width: 340, height: 20)
+        updateHaken.state = Neuigkeit.eingeschaltet ? .on : .off
+        v.addSubview(updateHaken)
+        notiz(T.t("Einmal am Tag eine Frage an GitHub, sonst nichts. Hark sagt dir nur Bescheid und tauscht sich nie von allein aus. Das ist die einzige Stelle, an der Hark ins Netz geht — deshalb ist sie standardmäßig aus.",
+                  "One question to GitHub a day, nothing else. Hark only tells you; it never replaces itself. This is the only place Hark goes online, which is why it starts switched off."))
 
         y -= 34
         let musikHaken = NSButton(checkboxWithTitle: T.t("Musik anhalten, während Hark hört oder spricht",
@@ -545,13 +555,13 @@ final class EinstellungenFenster: NSObject, NSWindowDelegate,
         let text = NSTextField(wrappingLabelWithString: T.t("""
         Sag dein Weckwort, red weiter, und Hark tippt es dorthin, wo dein Cursor steht. Antworten liest es dir vor.
 
-        Alles läuft auf diesem Mac. Die Spracherkennung arbeitet auf dem Gerät — fehlt das Sprachmodell, hört Hark lieber gar nicht zu, statt heimlich ins Netz zu funken. Die einzige Ausnahme ist der Schalter „Apples Server nutzen“ unter Erkennung, und den musst du selbst umlegen. Einen Server von uns gibt es nicht, kein Konto, keine Statistik.
+        Alles läuft auf diesem Mac. Die Spracherkennung arbeitet auf dem Gerät — fehlt das Sprachmodell, hört Hark lieber gar nicht zu, statt heimlich ins Netz zu funken. Zwei Ausnahmen gibt es, und beide legst du selbst um: „Apples Server nutzen“ unter Erkennung, und „Nach neuen Fassungen schauen“ unter Allgemein — eine Frage am Tag an GitHub, sonst nichts. Einen Server von uns gibt es nicht, kein Konto, keine Statistik.
 
         Von Darius Bardi. MIT-Lizenz.
         """, """
         Say your wake word, keep talking, and Hark types it wherever your cursor is. It reads answers back to you.
 
-        Everything runs on this Mac. Speech recognition works on the device — if the language model is missing, Hark refuses to listen rather than quietly going online. The one exception is the „use Apple’s servers“ switch under Accuracy, and only you can turn that on. No server of ours, no account, no analytics.
+        Everything runs on this Mac. Speech recognition works on the device — if the language model is missing, Hark refuses to listen rather than quietly going online. There are two exceptions, and both are yours to flip: “use Apple’s servers” under Accuracy, and “check for new versions” under General — one question a day to GitHub, nothing more. No server of ours, no account, no analytics.
 
         By Darius Bardi. MIT licensed.
         """))
@@ -669,6 +679,10 @@ final class EinstellungenFenster: NSObject, NSWindowDelegate,
     }
 
     @objc private func spracheGewechselt() { stimmenLaden(); katalogLaden() }
+
+    @objc private func updatePruefenUmschalten() {
+        Neuigkeit.eingeschaltet.toggle()
+    }
 
     @objc private func oberflaecheGewechselt() {
         let wahl = ["auto", "de", "en"][max(0, oberflaecheWahl.indexOfSelectedItem)]

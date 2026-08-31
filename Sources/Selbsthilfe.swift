@@ -137,6 +137,13 @@ enum Selbsthilfe {
 
         5. Mach das bei jeder Antwort, auch bei kurzen, und auch wenn ich nicht \
         extra danach frage — gerade am Ende einer laengeren Arbeit.
+
+        6. Falls ich mehrere Chats gleichzeitig offen habe: Schreib dann nicht \
+        in die Datei oben, sondern leg fuer jede Antwort eine neue Datei in den \
+        Ordner \(ordner)/postfach, benannt nach diesem Chat, zum Beispiel \
+        deinname.txt. Hark liest sie der Reihe nach vor, sagt vorher den Namen \
+        dazu und raeumt sie danach weg. So schneidet kein Chat dem anderen das \
+        Wort ab.
         """, """
         First things first: this only works in Cowork, not in a normal Claude \
         chat. If you are not in a Cowork task right now, tell me straight away \
@@ -168,6 +175,12 @@ enum Selbsthilfe {
 
         5. Do this for every answer, short ones included, and even when I do not \
         ask for it — especially at the end of a longer piece of work.
+
+        6. If I have several chats open at once: do not write into the file \
+        above. Instead drop each answer as a new file into the folder \
+        \(ordner)/postfach, named after this chat — yourname.txt for instance. \
+        Hark reads them in turn, says the name first and clears them away \
+        afterwards. That way no chat talks over another.
         """)
 
         NSPasteboard.general.clearContents()

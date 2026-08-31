@@ -119,6 +119,11 @@ final class HarkDelegate: NSObject, NSApplicationDelegate {
         }
         mund.starten()
 
+        // Erst wenn alles steht, und nur wenn du es eingeschaltet hast.
+        Timer.harkUhr(12) { _ in
+            Task { @MainActor in Neuigkeit.beiGelegenheitSchauen() }
+        }
+
         // One shortcut that works everywhere: select text, press Option+Command+L.
         tastenwaechter = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] e in
             guard let self else { return }
@@ -249,6 +254,13 @@ final class HarkDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(.separator())
 
+        let neues = NSMenuItem(title: "",
+                               action: #selector(nachNeuemSchauen),
+                               keyEquivalent: "")
+        neues.target = self
+        neues.tag = 11
+        menu.addItem(neues)
+
         let einst = NSMenuItem(title: "",
                                action: #selector(einstellungenOeffnen),
                                keyEquivalent: ",")
@@ -282,7 +294,14 @@ final class HarkDelegate: NSObject, NSApplicationDelegate {
         menu.item(withTag: 9)?.title = T.t("Verlauf…", "History…")
         menu.item(withTag: 8)?.title = T.t("Markiertes vorlesen  ⌥⌘L", "Read selection  ⌥⌘L")
         menu.item(withTag: 7)?.title = T.t("Für Claude einrichten…", "Set up for Claude…")
-        menu.item(withTag: 4)?.title = T.t("Vorlesen abbrechen", "Stop reading")
+        // Show what is still queued, otherwise you have no idea that three
+        // more answers are lined up behind this one.
+        let wartend = mund.wartende
+        menu.item(withTag: 4)?.title = wartend > 0
+            ? T.t("Vorlesen abbrechen (\(wartend) warten)",
+                  "Stop reading (\(wartend) waiting)")
+            : T.t("Vorlesen abbrechen", "Stop reading")
+        menu.item(withTag: 11)?.title = T.t("Nach Neuem schauen…", "Check for updates…")
         menu.item(withTag: 5)?.title = T.t("Einstellungen…", "Settings…")
         menu.item(withTag: 6)?.title = T.t("Hark beenden", "Quit Hark")
         zeichneSymbol()
@@ -312,6 +331,10 @@ final class HarkDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func claudeEinrichten() {
         Selbsthilfe.claudeAnleitungKopieren()
+    }
+
+    @objc private func nachNeuemSchauen() {
+        Neuigkeit.jetztSchauen()
     }
 
     @objc private func vorlesenAbbrechen() {

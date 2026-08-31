@@ -6,7 +6,7 @@ exec > >(tee "$OUT") 2>&1
 
 NAME="Hark"
 BUNDLE="studio.bazo.hark"
-VERSION="1.0"
+VERSION="1.1"
 APP="build/$NAME.app"
 
 echo "=== $NAME $VERSION bauen  $(date) ==="

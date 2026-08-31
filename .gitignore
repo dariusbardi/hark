@@ -14,3 +14,7 @@ NACHRICHT AN DEINEN FREUND.txt
 
 # Hark-Symbol.zip gehoert ausdruecklich MIT ins Repo:
 # ohne die Datei kann niemand, der das Projekt klont, das App-Symbol bauen.
+
+# Mein eigener Hochlade-Knopf, gehoert niemandem sonst
+HOCHLADEN.command
+ABGLEICHEN.command

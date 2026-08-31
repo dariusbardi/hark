@@ -11,19 +11,33 @@ Speech recognition uses Apple's on-device engine with
 is missing, Hark refuses to listen rather than falling back to a network
 service.
 
-**One exception, and it is yours to make.** Settings → Accuracy has a switch
-called "Better accuracy via Apple's servers". It is off. Turn it on and speech
-is sent to Apple for recognition instead — noticeably more accurate, and no
-longer private to your Mac. Nothing turns it on for you, and nothing hides
-what it does. Text-to-speech uses Apple's local voices or, optionally, Piper —
-also entirely local.
+**Two exceptions, and both are yours to make.**
 
-Hark has no server, no account, no analytics, no crash reporting, no update
-check. It opens exactly two kinds of network connection, both only when you
-press a button in Settings:
+**1. Apple's servers for recognition.** Settings → Accuracy has a switch called
+"Better accuracy via Apple's servers". It is off. Turn it on and speech is sent
+to Apple for recognition instead — noticeably more accurate, and no longer
+private to your Mac.
+
+**2. The update check.** Settings → General has "Check for new versions". It is
+off. Turn it on and Hark asks GitHub once a day whether a newer release exists.
+The request carries nothing but itself: no identifier, no version number, no
+usage of any kind. GitHub sees that somebody asked, and an IP address — exactly
+what it would see if you opened the page in a browser. Hark then tells you and
+opens the release page if you want. **It never downloads or installs anything
+on its own**, because without a paid Developer ID there would be no signature
+to verify the download against, and an app that replaces itself with unverified
+code is how bad software travels.
+
+Nothing turns either of these on for you, and nothing hides what they do.
+Text-to-speech uses Apple's local voices or, optionally, Piper — also entirely
+local.
+
+Hark has no server, no account, no analytics, no crash reporting. It opens
+exactly three kinds of network connection, each only after you ask for it:
 
 - downloading the Piper engine from the Python package index
 - downloading a Piper voice from Hugging Face
+- the daily update question to `api.github.com`, if you switched it on
 
 ## What is stored
 

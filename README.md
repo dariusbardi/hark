@@ -11,7 +11,8 @@ cursor is — in any app. Then it presses Return for you.
 It reads answers back to you, too. That is the part that makes it a
 conversation instead of a keyboard replacement.
 
-Everything runs on your Mac. Nothing goes online. **316 KB.**
+Everything runs on your Mac. Nothing goes online unless you switch it on
+yourself — and two switches are all there is. **316 KB.**
 
 ---
 
@@ -67,6 +68,16 @@ you. You speak, it types, Claude answers, you hear it.
 Claude needs file access for this — a connected folder in Cowork, or Claude
 Code. **If you use Claude in a browser**, that route is closed to you: select
 the answer instead and press ⌥⌘L. Same result, no setup.
+
+### More than one chat
+
+Next to the watched file is a `postfach` folder. Drop a text file in there and
+Hark reads it out, says which file it came from, and removes it. Files are read
+in the order they arrived, and nothing that is already being read gets cut off.
+
+That is the way in for a second assistant, a script, a cron job — anything that
+might speak up while something else is still talking. One file per message, so
+two writers landing in the same second cannot overwrite each other.
 
 ## Build it yourself
 
