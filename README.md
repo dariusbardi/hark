@@ -2,6 +2,8 @@
 
 **Say a wake word. Keep talking. It types.**
 
+![Hark typing three spoken questions into a Claude chat, hands-free](hark.gif)
+
 Every dictation app for the Mac makes you press a key first. Hark does not.
 You say *"hey hark"*, keep speaking, and your words appear wherever your
 cursor is — in any app. Then it presses Return for you.
