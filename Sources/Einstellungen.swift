@@ -4,7 +4,7 @@ import AppKit
 import AVFoundation
 import Speech
 
-let harkVersion = "1.3"
+let harkVersion = "1.3.1"
 
 @MainActor
 final class EinstellungenFenster: NSObject, NSWindowDelegate,

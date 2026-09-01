@@ -6,7 +6,7 @@ exec > >(tee "$OUT") 2>&1
 
 NAME="Hark"
 BUNDLE="studio.bazo.hark"
-VERSION="1.3"
+VERSION="1.3.1"
 APP="build/$NAME.app"
 
 echo "=== $NAME $VERSION bauen  $(date) ==="
@@ -42,6 +42,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+  <key>CFBundleDevelopmentRegion</key><string>en</string>
   <key>CFBundleName</key><string>$NAME</string>
   <key>CFBundleDisplayName</key><string>$NAME</string>
   <key>CFBundleExecutable</key><string>$NAME</string>
@@ -54,13 +55,28 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>LSUIElement</key><true/>
   <key>NSHumanReadableCopyright</key><string>BAZO</string>
   <key>NSMicrophoneUsageDescription</key>
-  <string>Hark hört auf dein Weckwort und schreibt auf, was du danach sagst. Alles bleibt auf diesem Mac.</string>
+  <string>Hark listens for your wake word and writes down what you say next. Everything stays on this Mac.</string>
   <key>NSSpeechRecognitionUsageDescription</key>
-  <string>Hark wandelt deine Sprache in Text um — auf diesem Gerät, ohne Internet.</string>
+  <string>Hark turns your speech into text — on this device, without internet.</string>
 </dict>
 </plist>
 PLIST
 echo "   fertig"
+
+echo ""
+echo "-- 2b. Sprachdateien fuer die System-Nachfragen --"
+# macOS zeigt die Mikrofon-Begruendung in der Systemsprache des Nutzers,
+# wenn es hier passende Dateien findet. Ohne sie gilt das Englisch oben.
+mkdir -p "$APP/Contents/Resources/de.lproj" "$APP/Contents/Resources/en.lproj"
+cat > "$APP/Contents/Resources/de.lproj/InfoPlist.strings" <<'TEXTE'
+NSMicrophoneUsageDescription = "Hark hört auf dein Weckwort und schreibt auf, was du danach sagst. Alles bleibt auf diesem Mac.";
+NSSpeechRecognitionUsageDescription = "Hark wandelt deine Sprache in Text um — auf diesem Gerät, ohne Internet.";
+TEXTE
+cat > "$APP/Contents/Resources/en.lproj/InfoPlist.strings" <<'TEXTE'
+NSMicrophoneUsageDescription = "Hark listens for your wake word and writes down what you say next. Everything stays on this Mac.";
+NSSpeechRecognitionUsageDescription = "Hark turns your speech into text — on this device, without internet.";
+TEXTE
+echo "   fertig (Deutsch und Englisch)"
 
 echo ""
 echo "-- 3. Signieren --"

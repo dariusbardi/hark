@@ -20,6 +20,19 @@ final class HarkDelegate: NSObject, NSApplicationDelegate {
     private let mund = Sprecher()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // If another Hark is already running (an old build, or the login
+        // item racing a manual start), two of us would grab the mic and both
+        // would read aloud. Whoever starts LAST is what the user just built
+        // or double-clicked -- so the older one is asked to leave politely.
+        let meineKennung = Bundle.main.bundleIdentifier ?? ""
+        if !meineKennung.isEmpty {
+            let ich = ProcessInfo.processInfo.processIdentifier
+            for alte in NSRunningApplication.runningApplications(withBundleIdentifier: meineKennung)
+                where alte.processIdentifier != ich {
+                _ = alte.terminate()
+            }
+        }
+
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         baueMenue()
         zeichneSymbol()
