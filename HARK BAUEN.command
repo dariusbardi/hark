@@ -6,7 +6,7 @@ exec > >(tee "$OUT") 2>&1
 
 NAME="Hark"
 BUNDLE="studio.bazo.hark"
-VERSION="1.1"
+VERSION="1.3"
 APP="build/$NAME.app"
 
 echo "=== $NAME $VERSION bauen  $(date) ==="
@@ -19,7 +19,8 @@ echo "-- 1. Übersetzen --"
 swiftc -O \
   -o "$APP/Contents/MacOS/$NAME" \
   Sources/*.swift \
-  -framework AppKit -framework AVFoundation -framework Speech -framework ServiceManagement
+  -framework AppKit -framework AVFoundation -framework Speech -framework ServiceManagement \
+  -framework NaturalLanguage
 echo "   fertig: $(du -h "$APP/Contents/MacOS/$NAME" | cut -f1)"
 
 echo ""

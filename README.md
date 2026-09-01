@@ -46,10 +46,17 @@ That is the whole idea.
 Download the `.dmg` from [Releases](../../releases), drag Hark to
 Applications.
 
-**First launch: right-click the app → Open → Open.** macOS blocks it
-otherwise. The app is signed, but with a personal Apple ID rather than a paid
-Developer ID — so Gatekeeper does not recognise it. This is a cost problem,
-not a safety one; the source is right here.
+**First launch — macOS blocks it, and the old trick no longer works.**
+Double-click Hark once and let macOS refuse. Then open **System Settings →
+Privacy & Security**, scroll to the bottom, and click **Open Anyway**. Confirm
+once more. That is it — only ever needed the first time.
+
+*(Control-clicking and choosing Open worked until macOS 14. Apple removed that
+in Sequoia, so on macOS 15 and later the route above is the only one.)*
+
+Hark is signed, but with a personal Apple ID rather than a paid Developer ID —
+so Gatekeeper does not recognise it. This is a cost problem, not a safety one;
+the source is right here.
 
 **Or build it yourself and skip that entirely** — see below. An app you
 compiled on your own machine was never downloaded, so macOS never quarantines

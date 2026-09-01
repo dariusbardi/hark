@@ -117,6 +117,11 @@ final class HarkDelegate: NSObject, NSApplicationDelegate {
             }
             self.menueAuffrischen()
         }
+        mund.beiVerworfen = { texte in
+            for t in texte {
+                Verlauf.geteilt.merken(T.t("übersprungen: ", "skipped: ") + t)
+            }
+        }
         mund.starten()
 
         // Erst wenn alles steht, und nur wenn du es eingeschaltet hast.
@@ -368,9 +373,10 @@ final class HarkDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        // Whatever we paused would otherwise stay paused: the app is gone and
-        // nobody is left to press play.
+        // Whatever we paused would otherwise stay paused, and the volume would
+        // stay turned up: the app is gone and nobody is left to put it back.
         Musik.sofortAufloesen()
+        Lautstaerke.sofortZurueck()
     }
 
     @objc private func beenden() {

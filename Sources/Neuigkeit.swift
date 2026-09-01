@@ -45,6 +45,10 @@ enum Neuigkeit {
         var anfrage = URLRequest(url: url)
         anfrage.timeoutInterval = 15
         anfrage.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        // Ohne das setzt macOS von sich aus einen Kopf mit App-Name, exakter
+        // Version und Betriebssystem-Bau ein. In PRIVACY.md steht, dass die
+        // Anfrage nichts bei sich traegt — also traegt sie nichts bei sich.
+        anfrage.setValue("Hark", forHTTPHeaderField: "User-Agent")
 
         URLSession.shared.dataTask(with: anfrage) { daten, antwort, _ in
             var gefunden: String?

@@ -172,6 +172,16 @@ enum Lautstaerke {
         schlange.async { setzen(alt) }
     }
 
+    /// Beim Beenden: sofort und ohne Umweg ueber die Nebenlaeufigkeit. Sonst
+    /// bleibt der Mac auf der hochgedrehten Lautstaerke stehen, weil das
+    /// Programm weg ist, bevor die Warteschlange drankommt.
+    static func sofortZurueck() {
+        guard angehoben, let alt = vorher else { return }
+        angehoben = false
+        vorher = nil
+        setzen(alt)
+    }
+
     nonisolated private static func lesen() -> Int {
         Int(Musik.skript("output volume of (get volume settings)")) ?? -1
     }

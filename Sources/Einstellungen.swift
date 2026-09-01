@@ -4,7 +4,7 @@ import AppKit
 import AVFoundation
 import Speech
 
-let harkVersion = "1.1"
+let harkVersion = "1.3"
 
 @MainActor
 final class EinstellungenFenster: NSObject, NSWindowDelegate,
@@ -341,6 +341,16 @@ final class EinstellungenFenster: NSObject, NSWindowDelegate,
         probe.frame = NSRect(x: 398, y: y - 5, width: 80, height: 28)
         probe.bezelStyle = .rounded
         v.addSubview(probe)
+
+        y -= 30
+        let sprachHaken = NSButton(checkboxWithTitle: T.t("Stimme zur Sprache des Textes wählen",
+                                                          "Match the voice to the text’s language"),
+                                   target: self, action: #selector(stimmeNachSpracheUmschalten))
+        sprachHaken.frame = NSRect(x: 174, y: y, width: 340, height: 20)
+        sprachHaken.state = Sprecher.stimmeNachSprache ? .on : .off
+        v.addSubview(sprachHaken)
+        notiz(T.t("Kommt eine Antwort auf Englisch, während oben eine deutsche Stimme steht, klingt das furchtbar. Hark schaut sich den Text an und nimmt eine passende Stimme. Erkennt es die Sprache nicht sicher, bleibt es bei deiner.",
+                  "An English answer read by a German voice is barely words. Hark looks at the text and picks a voice that fits. If it cannot tell for sure, it keeps yours."))
 
         y -= 36
         zeile(T.t("Tempo", "Speed"))   // applies to Apple voices and Piper alike
@@ -910,6 +920,10 @@ final class EinstellungenFenster: NSObject, NSWindowDelegate,
     @objc private func lautGeaendert() {
         Lautstaerke.ziel = Int(lautRegler.doubleValue.rounded())
         lautStandZeigen()
+    }
+
+    @objc private func stimmeNachSpracheUmschalten() {
+        Sprecher.stimmeNachSprache.toggle()
     }
 
     @objc private func tempoGeaendert() {

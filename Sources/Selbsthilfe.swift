@@ -144,6 +144,11 @@ enum Selbsthilfe {
         deinname.txt. Hark liest sie der Reihe nach vor, sagt vorher den Namen \
         dazu und raeumt sie danach weg. So schneidet kein Chat dem anderen das \
         Wort ab.
+
+        7. Wenn du laenger als ein paar Minuten an etwas arbeitest, sag mir \
+        zwischendurch kurz Bescheid — ein, zwei Saetze in die Datei: was du \
+        gerade gemacht hast und wie weit es ungefaehr ist. Lass mich nicht \
+        schweigend warten, ich sehe deinen Bildschirm ja nicht.
         """, """
         First things first: this only works in Cowork, not in a normal Claude \
         chat. If you are not in a Cowork task right now, tell me straight away \
@@ -181,6 +186,11 @@ enum Selbsthilfe {
         \(ordner)/postfach, named after this chat — yourname.txt for instance. \
         Hark reads them in turn, says the name first and clears them away \
         afterwards. That way no chat talks over another.
+
+        7. If you work on something for more than a couple of minutes, say \
+        something in between — a sentence or two into the file: what you just \
+        did and roughly how far along you are. Do not leave me waiting in \
+        silence; I cannot see your screen.
         """)
 
         NSPasteboard.general.clearContents()

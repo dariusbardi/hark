@@ -6,6 +6,7 @@
 // no sign-in, and Hark never has to put anything online.
 
 import AVFoundation
+import NaturalLanguage
 import Foundation
 
 @MainActor
@@ -157,8 +158,16 @@ final class Sprecher {
         stimme.stopSpeaking(at: .immediate)
     }
 
+    /// What was thrown away when you pressed stop. Postbox messages exist
+    /// nowhere else by then — their files are gone — so they go into the
+    /// history rather than into nothing.
+    var beiVerworfen: (([String]) -> Void)?
+
     func abbrechen() {
         // "Stop reading" means everything, not just this one sentence.
+        if !warteschlange.isEmpty {
+            beiVerworfen?(warteschlange.map(\.text))
+        }
         warteschlange.removeAll()
         stimme.stopSpeaking(at: .immediate)
         piper.abbrechen()
@@ -269,8 +278,11 @@ final class Sprecher {
         let naechste = warteschlange.removeFirst()
         if let quelle = naechste.quelle, !quelle.isEmpty {
             // Say where it came from, otherwise you have no idea which of your
-            // chats is talking to you.
-            sprich(T.t("\(quelle) schreibt: ", "\(quelle) says: ") + naechste.text)
+            // chats is talking to you. The language check runs on the message
+            // alone: "Bazo schreibt:" is Hark's own German, and on a short
+            // English message that prefix is enough to tip the guess.
+            sprich(T.t("\(quelle) schreibt: ", "\(quelle) says: ") + naechste.text,
+                   pruefText: naechste.text)
         } else {
             sprich(naechste.text)
         }
@@ -290,9 +302,16 @@ final class Sprecher {
         return stamm.prefix(1).uppercased() + stamm.dropFirst()
     }
 
-    func sprich(_ text: String) {
+    func sprich(_ text: String) { sprich(text, pruefText: text) }
+
+    /// `pruefText` is what the language check looks at. Usually the same thing
+    /// — but not when we put a sender's name in front of the message.
+    private func sprich(_ text: String, pruefText: String) {
         Self.merkeGesagt(text)
-        if PiperStimme.gewaehlt != nil {
+        // A Piper voice speaks exactly one language. Give it a text in another
+        // and you get sounds, not words — so we let Apple take that turn, with
+        // a voice that actually fits.
+        if let klang = PiperStimme.gewaehlt, Self.passtZu(klang, pruefText) {
             stimme.stopSpeaking(at: .immediate)
             piper.abbrechen()
             piperRedet = true
@@ -313,22 +332,22 @@ final class Sprecher {
                     // Piper is on strike — better to speak with Apple than not at all.
                     self.piperRedet = false
                     self.piperSpieltSchon = false
-                    self.mitApple(text)
+                    self.mitApple(text, pruefText: pruefText)
                 }
             }
             return
         }
-        mitApple(text)
+        mitApple(text, pruefText: pruefText)
     }
 
-    private func mitApple(_ text: String) {
+    private func mitApple(_ text: String, pruefText: String) {
+        // Piper may still be going: since the language check can send a text to
+        // Apple while Piper is mid-sentence, both would otherwise talk at once.
+        piper.abbrechen()
+        piperRedet = false
+        piperSpieltSchon = false
         let ausspruch = AVSpeechUtterance(string: text)
-        if let kennung = UserDefaults.standard.string(forKey: "stimme") {
-            ausspruch.voice = AVSpeechSynthesisVoice(identifier: kennung)
-        } else {
-            let sprache = Zuhoersprache.aktuell
-            ausspruch.voice = AVSpeechSynthesisVoice(language: sprache)
-        }
+        ausspruch.voice = Self.passendeStimme(fuer: pruefText)
         let tempo = UserDefaults.standard.double(forKey: "sprechtempo")
         ausspruch.rate = tempo > 0.1 ? Float(tempo) : 0.48
         stimme.stopSpeaking(at: .immediate)   // a new answer interrupts the old one
@@ -407,3 +426,77 @@ private final class Gedaechtnis: @unchecked Sendable {
 }
 
 private let gehoertes = Gedaechtnis()
+
+
+// MARK: - The right voice for the language
+
+extension Sprecher {
+
+    /// An English voice reading German is barely words at all — and that is
+    /// exactly what happens when the voice is set to one language and the
+    /// assistant answers in another. Hark used to read everything with
+    /// whatever voice was chosen and never noticed. Now it looks at the text.
+
+    /// nonisolated, weil die beiden Funktionen darunter es auch sind: sie
+    /// laufen aus dem Hintergrund. Die Eigenschaft rechnet nichts und haelt
+    /// nichts — sie liest nur die Einstellungen, und die duerfen das.
+    nonisolated static var stimmeNachSprache: Bool {
+        get {
+            UserDefaults.standard.object(forKey: "stimmeNachSprache") == nil
+                ? true : UserDefaults.standard.bool(forKey: "stimmeNachSprache")
+        }
+        set { UserDefaults.standard.set(newValue, forKey: "stimmeNachSprache") }
+    }
+
+    /// Which language is this? Apple's own recogniser, entirely on the device.
+    /// Only trusted when it is reasonably sure: three words can look like
+    /// anything, and guessing wrong is worse than not guessing.
+    nonisolated static func spracheVon(_ text: String) -> String? {
+        let kurz = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard kurz.count >= 12 else { return nil }
+        let erkenner = NLLanguageRecognizer()
+        erkenner.processString(kurz)
+        guard let sprache = erkenner.dominantLanguage else { return nil }
+        let werte = erkenner.languageHypotheses(withMaximum: 1)
+        guard let sicher = werte[sprache], sicher > 0.6 else { return nil }
+        return sprache.rawValue
+    }
+
+    nonisolated static func passtZu(_ klang: PiperKlang, _ text: String) -> Bool {
+        guard stimmeNachSprache, let erkannt = spracheVon(text) else { return true }
+        return klang.sprache.hasPrefix(erkannt)
+    }
+
+    /// The voice you chose — unless the text is plainly in another language,
+    /// and then the best one we have for that language.
+    nonisolated static func passendeStimme(fuer text: String) -> AVSpeechSynthesisVoice? {
+        let gewaehlt = UserDefaults.standard.string(forKey: "stimme")
+            .flatMap { AVSpeechSynthesisVoice(identifier: $0) }
+        let ersatz = gewaehlt ?? AVSpeechSynthesisVoice(language: Zuhoersprache.aktuell)
+
+        guard stimmeNachSprache, let erkannt = spracheVon(text) else { return ersatz }
+        if let gewaehlt, gewaehlt.language.hasPrefix(erkannt) { return gewaehlt }
+
+        // Without the filter this can land on Zarvox or Bubbles: macOS ships
+        // the novelty voices in the same list, and on a Mac with nothing
+        // downloaded every voice has the same quality rating. The name is only
+        // a tie-break, but it makes the choice repeatable instead of arbitrary.
+        let passende = AVSpeechSynthesisVoice.speechVoices()
+            .filter { $0.language.hasPrefix(erkannt) }
+            .filter { !$0.voiceTraits.contains(.isNoveltyVoice) }
+            .sorted { a, b in
+                let ga = guete(a), gb = guete(b)
+                return ga == gb ? a.name < b.name : ga > gb
+            }
+        return passende.first ?? ersatz
+    }
+
+    nonisolated private static func guete(_ s: AVSpeechSynthesisVoice) -> Int {
+        if s.voiceTraits.contains(.isPersonalVoice) { return 3 }
+        switch s.quality {
+        case .premium:  return 2
+        case .enhanced: return 1
+        default:        return 0
+        }
+    }
+}
