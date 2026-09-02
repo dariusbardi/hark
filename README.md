@@ -12,7 +12,7 @@ It reads answers back to you, too. That is the part that makes it a
 conversation instead of a keyboard replacement.
 
 Everything runs on your Mac. Nothing goes online unless you switch it on
-yourself — and two switches are all there is. **316 KB.**
+yourself — and two switches are all there is. **under 1 MB.**
 
 ---
 
